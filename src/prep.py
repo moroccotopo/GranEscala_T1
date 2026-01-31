@@ -50,4 +50,5 @@ base = pd.concat([
 ], ignore_index=True, sort=False)
 
 
+monthly.to_pickle("../data/prep/monthly.pkl")
 base.to_pickle("../data/prep/base.pkl")
