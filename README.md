@@ -1,31 +1,31 @@
 \# Estructura del repositorio
 
-├───artifacts
-│   ├───model.joblib
-│   ├───Resúmen ejecutivo.docx
-│   └───Resúmen ejecutivo.pdf
-├───data
-│   ├───inference
-│   │   ├───test.pkl
-│   │   └───xtest.pkl
-│   ├───predictions
-│   │   └───submission.csv
-│   ├───prep
-│   │   ├───base.pkl
-│   │   └───monthly.pkl
-│   └───raw
-│       ├───item\_categories.csv
-│       ├───item.csv
-│       ├───sales\_train.csv
-│       ├───sample\_submission.csv
-│       ├───shop.csv
-│       └───test.csv
-├───notebooks
-│   ├───EDA.ipynb
-│   └───Model.ipynb
-└───src
-&nbsp;   ├───\_\_init\_\_.py
-&nbsp;   ├───inference.py
-&nbsp;   ├───prep.py
+├───artifacts\n
+│   ├───model.joblib\n
+│   ├───Resúmen ejecutivo.docx\n
+│   └───Resúmen ejecutivo.pdf\n
+├───data\n
+│   ├───inference\n
+│   │   ├───test.pkl\n
+│   │   └───xtest.pkl\n
+│   ├───predictions\n
+│   │   └───submission.csv\n
+│   ├───prep\n
+│   │   ├───base.pkl\n
+│   │   └───monthly.pkl\n
+│   └───raw\n
+│       ├───item\_categories.csv\n
+│       ├───item.csv\n
+│       ├───sales\_train.csv\n
+│       ├───sample\_submission.csv\n
+│       ├───shop.csv\n
+│       └───test.csv\n
+├───notebooks\n
+│   ├───EDA.ipynb\n
+│   └───Model.ipynb\n
+└───src\n
+&nbsp;   ├───\_\_init\_\_.py\n
+&nbsp;   ├───inference.py\n
+&nbsp;   ├───prep.py\n
 &nbsp;   └───train.py
 
