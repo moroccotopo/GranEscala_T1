@@ -1,0 +1,5 @@
+2026-02-06 22:58:46,018 - prediccion - INFO - Iniciando predicción...
+2026-02-06 22:58:46,715 - prediccion - INFO - Cargado xtest.pkl (rows=214200, cols=7)
+2026-02-06 22:58:46,715 - prediccion - INFO - Cargado test.pkl (rows=214200, cols=3)
+2026-02-06 22:58:46,903 - prediccion - INFO - Predicciones guardadas: submission.csv (rows=214200)
+2026-02-06 22:58:46,903 - prediccion - INFO - Fin predicción. Tiempo: 0.89s

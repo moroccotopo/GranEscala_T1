@@ -1,0 +1,11 @@
+2026-02-06 23:00:25,154 - prep - INFO - Iniciando preprocesamiento...
+2026-02-06 23:00:25,569 - prep - INFO - Cargado sales_train.csv (rows=2935849, cols=6)
+2026-02-06 23:00:25,588 - prep - INFO - Cargado test.csv (rows=214200, cols=3)
+2026-02-06 23:00:25,605 - prep - INFO - Cargado items.csv (rows=22170, cols=3)
+2026-02-06 23:00:25,606 - prep - INFO - Cargado item_categories.csv (rows=84, cols=2)
+2026-02-06 23:00:25,607 - prep - INFO - Cargado shops.csv (rows=60, cols=2)
+2026-02-06 23:00:25,621 - prep - INFO - Cargado sample_submission.csv (rows=214200, cols=2)
+2026-02-06 23:00:25,997 - prep - INFO - Último date_block_num: 33 | Bloque test: 34
+2026-02-06 23:00:26,055 - prep - INFO - Guardado monthly.pkl (rows=1609124)
+2026-02-06 23:00:26,055 - prep - INFO - Guardado base.pkl (rows=1823324)
+2026-02-06 23:00:26,055 - prep - INFO - Fin prep. Tiempo: 0.90s

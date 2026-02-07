@@ -1,0 +1,8 @@
+2026-02-06 23:07:32,790 - train - INFO - Iniciando entrenamiento...
+2026-02-06 23:07:32,851 - train - INFO - Cargado monthly.pkl (rows=1609124, cols=6)
+2026-02-06 23:07:32,851 - train - INFO - Cargado base.pkl (rows=1823324, cols=6)
+2026-02-06 23:07:32,854 - train - INFO - Último date_block_num: 33
+2026-02-06 23:07:33,579 - train - INFO - Train rows (con target): 1609124
+2026-02-06 23:07:33,677 - train - INFO - Modelo entrenado - RMSE valid (último mes): 2.302038
+2026-02-06 23:07:33,677 - train - INFO - Modelo guardado: model.joblib
+2026-02-06 23:07:33,678 - train - INFO - Fin entrenamiento. Tiempo: 0.89s
