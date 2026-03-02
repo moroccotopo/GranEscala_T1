@@ -6,6 +6,8 @@ Carga datos preparados (monthly.pkl y base.pkl), crea features (lags, month, avg
 evalúa RMSE en el último bloque y guarda el modelo en artifacts/model.joblib.
 """
 
+
+import argparse
 import time
 from pathlib import Path
 
@@ -15,14 +17,7 @@ import pandas as pd
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error
 
-from logging_utils import setup_logger
-
-
-# --- Rutas / constantes ---
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-PREP_DIR = PROJECT_ROOT / "data" / "prep"
-ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
-MODEL_PATH = ARTIFACTS_DIR / "model.joblib"
+from src.common.logging_utils import setup_logger
 
 CLIP_MIN = 0
 CLIP_MAX = 20
@@ -38,37 +33,43 @@ FEATURE_COLUMNS = [
 ]
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Training step: train Ridge model")
+    parser.add_argument("--prep-dir", type=str, default="data/prep")
+    parser.add_argument("--monthly-file", type=str, default="monthly.pkl")
+    parser.add_argument("--base-file", type=str, default="base.pkl")
+    parser.add_argument("--output-path", type=str, default="artifacts/model.joblib")
+    parser.add_argument("--alpha", type=float, default=1.0)
+    return parser.parse_args()
+
+
+def main() -> None:
     logger = setup_logger("train")
     start_time = time.time()
     logger.info("Iniciando entrenamiento...")
 
-    monthly_path = PREP_DIR / "monthly.pkl"
-    base_path = PREP_DIR / "base.pkl"
+    # src/training/train.py -> parents[2] = raíz del repo
+    project_root = Path(__file__).resolve().parents[2]
+    args = parse_args()
+
+    prep_dir = project_root / args.prep_dir
+    monthly_path = prep_dir / args.monthly_file
+    base_path = prep_dir / args.base_file
+    model_path = project_root / args.output_path
 
     if not monthly_path.exists():
-        logger.error("No se encontró: %s", monthly_path.name)
+        logger.error("No se encontró: %s", monthly_path)
         raise FileNotFoundError(monthly_path)
 
     if not base_path.exists():
-        logger.error("No se encontró: %s", base_path.name)
+        logger.error("No se encontró: %s", base_path)
         raise FileNotFoundError(base_path)
 
     monthly = pd.read_pickle(monthly_path)
     base = pd.read_pickle(base_path)
 
-    logger.info(
-        "Cargado %s (rows=%d, cols=%d)",
-        monthly_path.name,
-        len(monthly),
-        monthly.shape[1],
-    )
-    logger.info(
-        "Cargado %s (rows=%d, cols=%d)",
-        base_path.name,
-        len(base),
-        base.shape[1],
-    )
+    logger.info("Cargado %s (rows=%d, cols=%d)", monthly_path.name, len(monthly), monthly.shape[1])
+    logger.info("Cargado %s (rows=%d, cols=%d)", base_path.name, len(base), base.shape[1])
 
     last_block = int(monthly["date_block_num"].max())
     logger.info("Último date_block_num: %d", last_block)
@@ -108,7 +109,7 @@ if __name__ == "__main__":
     is_train = train_data["date_block_num"] < last_block
     is_valid = train_data["date_block_num"] == last_block
 
-    model = Ridge(alpha=1.0, random_state=0)
+    model = Ridge(alpha=float(args.alpha), random_state=0)
     model.fit(features[is_train], target[is_train])
 
     pred_valid = model.predict(features[is_valid])
@@ -117,8 +118,12 @@ if __name__ == "__main__":
     rmse = float(np.sqrt(mean_squared_error(target[is_valid], pred_valid)))
     logger.info("Modelo entrenado - RMSE valid (último mes): %.6f", rmse)
 
-    ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
-    joblib.dump(model, MODEL_PATH)
-    logger.info("Modelo guardado: %s", MODEL_PATH.name)
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, model_path)
+    logger.info("Modelo guardado: %s", model_path)
 
     logger.info("Fin entrenamiento. Tiempo: %.2fs", time.time() - start_time)
+
+
+if __name__ == "__main__":
+    main()

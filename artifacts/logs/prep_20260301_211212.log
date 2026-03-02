@@ -1,0 +1,12 @@
+2026-03-01 21:12:12,835 - prep - INFO - Logger inicializado. Archivo: /Users/cesarrojas/Documents/Documents - Cesar’s MacBook Air/MCD-Spring-2026/GranEscala/Tarea1/artifacts/logs/prep_20260301_211212.log
+2026-03-01 21:12:12,835 - prep - INFO - Iniciando preprocesamiento...
+2026-03-01 21:12:13,264 - prep - INFO - Cargado sales_train.csv (rows=2935849, cols=6)
+2026-03-01 21:12:13,283 - prep - INFO - Cargado test.csv (rows=214200, cols=3)
+2026-03-01 21:12:13,303 - prep - INFO - Cargado items.csv (rows=22170, cols=3)
+2026-03-01 21:12:13,304 - prep - INFO - Cargado item_categories.csv (rows=84, cols=2)
+2026-03-01 21:12:13,305 - prep - INFO - Cargado shops.csv (rows=60, cols=2)
+2026-03-01 21:12:13,318 - prep - INFO - Cargado sample_submission.csv (rows=214200, cols=2)
+2026-03-01 21:12:13,678 - prep - INFO - Último date_block_num: 33 | Bloque test: 34
+2026-03-01 21:12:13,741 - prep - INFO - Guardado monthly.pkl (rows=1609124)
+2026-03-01 21:12:13,741 - prep - INFO - Guardado base.pkl (rows=1823324)
+2026-03-01 21:12:13,741 - prep - INFO - Fin prep. Tiempo: 0.91s
