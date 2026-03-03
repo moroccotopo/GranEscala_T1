@@ -53,6 +53,18 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def validate_columns(df: pd.DataFrame, required: list, name: str, logger=None):
+    """
+    Verifica si las columnas requeridas existen en el dataframe.
+    Si se añade el logger como parámetro, este registra un error en caso de que haya columnas faltantes.
+    """
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        if logger:
+            logger.error("%s sin columnas requeridas: %s", name, missing)
+        raise ValueError(f"Missing columns in {name}: {missing}")
+
+
 def main() -> None:
     logger = setup_logger("prep")
     start_time = time.time()
@@ -82,20 +94,9 @@ def main() -> None:
     items = tablas["items.csv"].copy()
 
     # Validación de columnas mínimas
-    missing_sales = [c for c in REQUIRED_SALES_COLS if c not in ventas_diarias.columns]
-    if missing_sales:
-        logger.error("sales_train.csv sin columnas requeridas: %s", missing_sales)
-        raise ValueError(f"Missing columns in sales_train.csv: {missing_sales}")
-
-    missing_test = [c for c in REQUIRED_TEST_COLS if c not in test.columns]
-    if missing_test:
-        logger.error("test.csv sin columnas requeridas: %s", missing_test)
-        raise ValueError(f"Missing columns in test.csv: {missing_test}")
-
-    missing_items = [c for c in REQUIRED_ITEMS_COLS if c not in items.columns]
-    if missing_items:
-        logger.error("items.csv sin columnas requeridas: %s", missing_items)
-        raise ValueError(f"Missing columns in items.csv: {missing_items}")
+    validate_columns(ventas_diarias, REQUIRED_SALES_COLS, "sales_train.csv", logger)
+    validate_columns(test, REQUIRED_TEST_COLS, "test.csv", logger)
+    validate_columns(items, REQUIRED_ITEMS_COLS, "items.csv", logger)
 
     items = items[["item_id", "item_category_id"]].copy()
 

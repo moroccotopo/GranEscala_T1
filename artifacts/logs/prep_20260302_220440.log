@@ -1,0 +1,12 @@
+2026-03-02 22:04:40,208 - prep - INFO - Logger inicializado. Archivo: C:\Users\Felip\Documents\MS\gran-escala\GranEscala_T1\artifacts\logs\prep_20260302_220440.log
+2026-03-02 22:04:40,209 - prep - INFO - Iniciando preprocesamiento...
+2026-03-02 22:04:41,914 - prep - INFO - Cargado sales_train.csv (rows=2935849, cols=6)
+2026-03-02 22:04:42,000 - prep - INFO - Cargado test.csv (rows=214200, cols=3)
+2026-03-02 22:04:42,073 - prep - INFO - Cargado items.csv (rows=22170, cols=3)
+2026-03-02 22:04:42,090 - prep - INFO - Cargado item_categories.csv (rows=84, cols=2)
+2026-03-02 22:04:42,105 - prep - INFO - Cargado shops.csv (rows=60, cols=2)
+2026-03-02 22:04:42,190 - prep - INFO - Cargado sample_submission.csv (rows=214200, cols=2)
+2026-03-02 22:04:43,563 - prep - INFO - Último date_block_num: 33 | Bloque test: 34
+2026-03-02 22:04:43,854 - prep - INFO - Guardado monthly.pkl (rows=1609124)
+2026-03-02 22:04:43,854 - prep - INFO - Guardado base.pkl (rows=1823324)
+2026-03-02 22:04:43,855 - prep - INFO - Fin prep. Tiempo: 3.65s
