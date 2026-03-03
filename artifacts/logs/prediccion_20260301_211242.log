@@ -1,0 +1,6 @@
+2026-03-01 21:12:42,251 - prediccion - INFO - Logger inicializado. Archivo: /Users/cesarrojas/Documents/Documents - Cesar’s MacBook Air/MCD-Spring-2026/GranEscala/Tarea1/artifacts/logs/prediccion_20260301_211242.log
+2026-03-01 21:12:42,251 - prediccion - INFO - Iniciando predicción...
+2026-03-01 21:12:42,788 - prediccion - INFO - Cargado xtest.pkl (rows=214200, cols=7)
+2026-03-01 21:12:42,788 - prediccion - INFO - Cargado test.pkl (rows=214200, cols=3)
+2026-03-01 21:12:42,932 - prediccion - INFO - Predicciones guardadas: submission.csv (rows=214200)
+2026-03-01 21:12:42,932 - prediccion - INFO - Fin predicción. Tiempo: 0.68s

@@ -1,0 +1,14 @@
+# .dockerignore
+.git
+__pycache__/
+*.pyc
+.venv/
+.uv/
+.uv-cache/
+dist/
+build/
+*.egg-info/
+artifacts/
+data/
+docs/img/
+.DS_Store

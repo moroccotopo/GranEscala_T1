@@ -5,16 +5,13 @@ Prepara los datos crudos: carga CSVs desde data/raw, agrega ventas a nivel mensu
 y guarda outputs intermedios en data/prep (monthly.pkl y base.pkl).
 """
 
+import argparse
 import time
 from pathlib import Path
 
 import pandas as pd
 
-from logging_utils import setup_logger
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = PROJECT_ROOT / "data" / "raw"
-PREP_DIR = PROJECT_ROOT / "data" / "prep"
+from src.common.logging_utils import setup_logger
 
 FILES = [
     "sales_train.csv",
@@ -39,18 +36,41 @@ CLIP_MIN = 0
 CLIP_MAX = 20
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Preprocessing: build monthly.pkl and base.pkl")
+    parser.add_argument(
+        "--raw-dir",
+        type=str,
+        default="data/raw",
+        help="Directorio de entrada con CSVs raw (relativo a la raíz del repo).",
+    )
+    parser.add_argument(
+        "--prep-dir",
+        type=str,
+        default="data/prep",
+        help="Directorio de salida para pickles (relativo a la raíz del repo).",
+    )
+    return parser.parse_args()
+
+
+def main() -> None:
     logger = setup_logger("prep")
     start_time = time.time()
-
     logger.info("Iniciando preprocesamiento...")
+
+    # src/preprocessing/prep.py -> parents[2] = raíz del repo
+    project_root = Path(__file__).resolve().parents[2]
+    args = parse_args()
+
+    raw_dir = project_root / args.raw_dir
+    prep_dir = project_root / args.prep_dir
 
     # Cargar archivos raw
     tablas: dict[str, pd.DataFrame] = {}
     for filename in FILES:
-        path = RAW_DIR / filename
+        path = raw_dir / filename
         if not path.exists():
-            logger.error("No se encontró: %s", path.name)
+            logger.error("No se encontró: %s", path)
             raise FileNotFoundError(path)
 
         df = pd.read_csv(path)
@@ -112,9 +132,9 @@ if __name__ == "__main__":
         sort=False,
     )
 
-    PREP_DIR.mkdir(parents=True, exist_ok=True)
-    monthly_path = PREP_DIR / "monthly.pkl"
-    base_path = PREP_DIR / "base.pkl"
+    prep_dir.mkdir(parents=True, exist_ok=True)
+    monthly_path = prep_dir / "monthly.pkl"
+    base_path = prep_dir / "base.pkl"
 
     monthly.to_pickle(monthly_path)
     base.to_pickle(base_path)
@@ -122,3 +142,7 @@ if __name__ == "__main__":
     logger.info("Guardado %s (rows=%d)", monthly_path.name, len(monthly))
     logger.info("Guardado %s (rows=%d)", base_path.name, len(base))
     logger.info("Fin prep. Tiempo: %.2fs", time.time() - start_time)
+
+
+if __name__ == "__main__":
+    main()
