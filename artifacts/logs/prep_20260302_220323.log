@@ -1,0 +1,3 @@
+2026-03-02 22:03:23,068 - prep - INFO - Logger inicializado. Archivo: C:\Users\Felip\Documents\MS\gran-escala\GranEscala_T1\artifacts\logs\prep_20260302_220323.log
+2026-03-02 22:03:23,069 - prep - INFO - Iniciando preprocesamiento...
+2026-03-02 22:03:23,071 - prep - ERROR - No se encontró: C:\Users\Felip\Documents\MS\gran-escala\GranEscala_T1\data\raw\sales_train.csv
