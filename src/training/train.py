@@ -44,6 +44,35 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def crear_lags(base, monthly) -> pd.DataFrame:
+    """Crea lag features."""
+    # Lag 1
+    lag1 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
+    lag1["date_block_num"] = lag1["date_block_num"] + 1
+    lag1 = lag1.rename(columns={"item_cnt_month": "lag1_cnt"})
+    base = base.merge(lag1, on=["date_block_num", "shop_id", "item_id"], how="left")
+    base["lag1_cnt"] = base["lag1_cnt"].fillna(0)
+
+    # Lag 12
+    lag12 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
+    lag12["date_block_num"] = lag12["date_block_num"] + 12
+    lag12 = lag12.rename(columns={"item_cnt_month": "lag12_cnt"})
+    base = base.merge(lag12, on=["date_block_num", "shop_id", "item_id"], how="left")
+    base["lag12_cnt"] = base["lag12_cnt"].fillna(0)
+
+    # Mes del año
+    base["month"] = base["date_block_num"] % 12
+    return base
+
+
+def impute_avg_price(base: pd.DataFrame, monthly: pd.DataFrame) -> pd.DataFrame:
+    """Rellena los precios faltantes usando promedios de items y medianas mensuales."""
+    item_avg_price = monthly.groupby("item_id")["avg_price"].mean()
+    base["avg_price"] = base["avg_price"].fillna(base["item_id"].map(item_avg_price))
+    base["avg_price"] = base["avg_price"].fillna(monthly["avg_price"].median())
+    return base
+
+
 def main() -> None:
     logger = setup_logger("train")
     start_time = time.time()
@@ -75,27 +104,10 @@ def main() -> None:
     last_block = int(monthly["date_block_num"].max())
     logger.info("Último date_block_num: %d", last_block)
 
-    # Lag 1
-    lag1 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
-    lag1["date_block_num"] = lag1["date_block_num"] + 1
-    lag1 = lag1.rename(columns={"item_cnt_month": "lag1_cnt"})
-    base = base.merge(lag1, on=["date_block_num", "shop_id", "item_id"], how="left")
-    base["lag1_cnt"] = base["lag1_cnt"].fillna(0)
-
-    # Lag 12
-    lag12 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
-    lag12["date_block_num"] = lag12["date_block_num"] + 12
-    lag12 = lag12.rename(columns={"item_cnt_month": "lag12_cnt"})
-    base = base.merge(lag12, on=["date_block_num", "shop_id", "item_id"], how="left")
-    base["lag12_cnt"] = base["lag12_cnt"].fillna(0)
-
-    # Mes del año
-    base["month"] = base["date_block_num"] % 12
+    base = crear_lags(base, monthly)
 
     # Imputación avg_price
-    item_avg_price = monthly.groupby("item_id")["avg_price"].mean()
-    base["avg_price"] = base["avg_price"].fillna(base["item_id"].map(item_avg_price))
-    base["avg_price"] = base["avg_price"].fillna(monthly["avg_price"].median())
+    base = impute_avg_price(base, monthly)
 
     # Filtro de datos para entrenamiento
     train_data = (
@@ -128,7 +140,7 @@ def main() -> None:
             n_jobs=-1
         )
 
-        grid_search.fit(features, target)
+        grid_search.fit(features[is_train], target[is_train])
         model = grid_search.best_estimator_
         logger.info("Alpha optimizada: %s", grid_search.best_params_['alpha'])
     else:
