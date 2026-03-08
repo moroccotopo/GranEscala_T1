@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 
 from src.common.logging_utils import setup_logger
 
@@ -96,22 +97,46 @@ def main() -> None:
     base["avg_price"] = base["avg_price"].fillna(base["item_id"].map(item_avg_price))
     base["avg_price"] = base["avg_price"].fillna(monthly["avg_price"].median())
 
+    # Filtro de datos para entrenamiento
     train_data = (
         base[base["date_block_num"] <= last_block]
         .dropna(subset=["item_cnt_month"])
         .copy()
     )
     logger.info("Train rows (con target): %d", len(train_data))
-
     features = train_data[FEATURE_COLUMNS].astype(float)
     target = train_data["item_cnt_month"].astype(float)
 
     is_train = train_data["date_block_num"] < last_block
     is_valid = train_data["date_block_num"] == last_block
 
-    model = Ridge(alpha=float(args.alpha), random_state=0)
-    model.fit(features[is_train], target[is_train])
+    # Se implementa Grid Search sólo si alpha tiene su valor default (alpha = 1.0)
+    if args.alpha == 1.0:
+        logger.info("Iniciando Grid Search para optimización de hiperparámetro...")
 
+        ts_split = TimeSeriesSplit(n_splits=3)
+        param_grid = {
+            'alpha': [0.1, 1.0, 10.0, 100.0, 1.0E3, 1.0E4, 1.0E5, 1.0E6]
+        }
+    
+        # GridSearch will find the best alpha using RMSE as the metric
+        grid_search = GridSearchCV(
+            estimator=Ridge(random_state=0),
+            param_grid=param_grid,
+            cv=ts_split,
+            scoring='neg_root_mean_squared_error',
+            n_jobs=-1
+        )
+
+        grid_search.fit(features, target)
+        model = grid_search.best_estimator_
+        logger.info("Alpha optimizada: %s", grid_search.best_params_['alpha'])
+    else:
+        logger.info("Entrenando modelo con alpha: %.2f.", args.alpha)
+        model = Ridge(alpha=float(args.alpha), random_state=0)
+        model.fit(features[is_train], target[is_train])
+
+    # Métrica
     pred_valid = model.predict(features[is_valid])
     pred_valid = np.clip(pred_valid, CLIP_MIN, CLIP_MAX)
 
