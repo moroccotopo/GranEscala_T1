@@ -1,0 +1,11 @@
+2026-03-08 00:01:48,465 - train - INFO - Logger inicializado. Archivo: C:\Users\Felip\Documents\MS\gran-escala\GranEscala_T1\artifacts\logs\train_20260308_000148.log
+2026-03-08 00:01:48,466 - train - INFO - Iniciando entrenamiento...
+2026-03-08 00:01:48,542 - train - INFO - Cargado monthly.pkl (rows=1609124, cols=6)
+2026-03-08 00:01:48,543 - train - INFO - Cargado base.pkl (rows=1823324, cols=6)
+2026-03-08 00:01:48,546 - train - INFO - Último date_block_num: 33
+2026-03-08 00:01:51,313 - train - INFO - Train rows (con target): 1609124
+2026-03-08 00:01:51,386 - train - INFO - Iniciando Grid Search para optimización de hiperparámetro...
+2026-03-08 00:01:59,553 - train - INFO - Alpha optimizada: 100000.0
+2026-03-08 00:01:59,561 - train - INFO - Modelo entrenado - RMSE valid (último mes): 2.301337
+2026-03-08 00:01:59,564 - train - INFO - Modelo guardado: C:\Users\Felip\Documents\MS\gran-escala\GranEscala_T1\artifacts\model.joblib
+2026-03-08 00:01:59,564 - train - INFO - Fin entrenamiento. Tiempo: 11.10s

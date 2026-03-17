@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import TimeSeriesSplit, GridSearchCV
 
 from src.common.logging_utils import setup_logger
 
@@ -41,6 +42,35 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-path", type=str, default="artifacts/model.joblib")
     parser.add_argument("--alpha", type=float, default=1.0)
     return parser.parse_args()
+
+
+def crear_lags(base, monthly) -> pd.DataFrame:
+    """Crea lag features."""
+    # Lag 1
+    lag1 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
+    lag1["date_block_num"] = lag1["date_block_num"] + 1
+    lag1 = lag1.rename(columns={"item_cnt_month": "lag1_cnt"})
+    base = base.merge(lag1, on=["date_block_num", "shop_id", "item_id"], how="left")
+    base["lag1_cnt"] = base["lag1_cnt"].fillna(0)
+
+    # Lag 12
+    lag12 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
+    lag12["date_block_num"] = lag12["date_block_num"] + 12
+    lag12 = lag12.rename(columns={"item_cnt_month": "lag12_cnt"})
+    base = base.merge(lag12, on=["date_block_num", "shop_id", "item_id"], how="left")
+    base["lag12_cnt"] = base["lag12_cnt"].fillna(0)
+
+    # Mes del año
+    base["month"] = base["date_block_num"] % 12
+    return base
+
+
+def impute_avg_price(base: pd.DataFrame, monthly: pd.DataFrame) -> pd.DataFrame:
+    """Rellena los precios faltantes usando promedios de items y medianas mensuales."""
+    item_avg_price = monthly.groupby("item_id")["avg_price"].mean()
+    base["avg_price"] = base["avg_price"].fillna(base["item_id"].map(item_avg_price))
+    base["avg_price"] = base["avg_price"].fillna(monthly["avg_price"].median())
+    return base
 
 
 def main() -> None:
@@ -74,44 +104,51 @@ def main() -> None:
     last_block = int(monthly["date_block_num"].max())
     logger.info("Último date_block_num: %d", last_block)
 
-    # Lag 1
-    lag1 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
-    lag1["date_block_num"] = lag1["date_block_num"] + 1
-    lag1 = lag1.rename(columns={"item_cnt_month": "lag1_cnt"})
-    base = base.merge(lag1, on=["date_block_num", "shop_id", "item_id"], how="left")
-    base["lag1_cnt"] = base["lag1_cnt"].fillna(0)
-
-    # Lag 12
-    lag12 = monthly[["date_block_num", "shop_id", "item_id", "item_cnt_month"]].copy()
-    lag12["date_block_num"] = lag12["date_block_num"] + 12
-    lag12 = lag12.rename(columns={"item_cnt_month": "lag12_cnt"})
-    base = base.merge(lag12, on=["date_block_num", "shop_id", "item_id"], how="left")
-    base["lag12_cnt"] = base["lag12_cnt"].fillna(0)
-
-    # Mes del año
-    base["month"] = base["date_block_num"] % 12
+    base = crear_lags(base, monthly)
 
     # Imputación avg_price
-    item_avg_price = monthly.groupby("item_id")["avg_price"].mean()
-    base["avg_price"] = base["avg_price"].fillna(base["item_id"].map(item_avg_price))
-    base["avg_price"] = base["avg_price"].fillna(monthly["avg_price"].median())
+    base = impute_avg_price(base, monthly)
 
+    # Filtro de datos para entrenamiento
     train_data = (
         base[base["date_block_num"] <= last_block]
         .dropna(subset=["item_cnt_month"])
         .copy()
     )
     logger.info("Train rows (con target): %d", len(train_data))
-
     features = train_data[FEATURE_COLUMNS].astype(float)
     target = train_data["item_cnt_month"].astype(float)
 
     is_train = train_data["date_block_num"] < last_block
     is_valid = train_data["date_block_num"] == last_block
 
-    model = Ridge(alpha=float(args.alpha), random_state=0)
-    model.fit(features[is_train], target[is_train])
+    # Se implementa Grid Search sólo si alpha tiene su valor default (alpha = 1.0)
+    if args.alpha == 1.0:
+        logger.info("Iniciando Grid Search para optimización de hiperparámetro...")
 
+        ts_split = TimeSeriesSplit(n_splits=3)
+        param_grid = {
+            'alpha': [0.1, 1.0, 10.0, 100.0, 1.0E3, 1.0E4, 1.0E5, 1.0E6]
+        }
+    
+        # GridSearch will find the best alpha using RMSE as the metric
+        grid_search = GridSearchCV(
+            estimator=Ridge(random_state=0),
+            param_grid=param_grid,
+            cv=ts_split,
+            scoring='neg_root_mean_squared_error',
+            n_jobs=-1
+        )
+
+        grid_search.fit(features[is_train], target[is_train])
+        model = grid_search.best_estimator_
+        logger.info("Alpha optimizada: %s", grid_search.best_params_['alpha'])
+    else:
+        logger.info("Entrenando modelo con alpha: %.2f.", args.alpha)
+        model = Ridge(alpha=float(args.alpha), random_state=0)
+        model.fit(features[is_train], target[is_train])
+
+    # Métrica
     pred_valid = model.predict(features[is_valid])
     pred_valid = np.clip(pred_valid, CLIP_MIN, CLIP_MAX)
 
