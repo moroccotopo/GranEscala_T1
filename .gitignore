@@ -10,3 +10,10 @@ wheels/
 # Virtual environments
 .venv
 data/
+.DS_Store
+artifacts/logs/
+data/
+
+.DS_Store
+artifacts/logs/
+data/

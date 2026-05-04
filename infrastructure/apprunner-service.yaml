@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Public App Runner service for GranEscala Streamlit MVP.
+Parameters:
+  ServiceName: {Type: String, Default: granescala-forecast-mvp}
+  ImageUri: {Type: String}
+  AwsRegion: {Type: String, Default: us-east-1}
+  ForecastBucket: {Type: String}
+  ProjectPrefix: {Type: String, Default: granescala}
+  AthenaDatabase: {Type: String, Default: granescala_mvp}
+  AthenaOutput: {Type: String}
+  FeedbackBackend: {Type: String, Default: s3, AllowedValues: [s3, postgres]}
+  DatabaseUrl: {Type: String, Default: '', NoEcho: true}
+  EndpointName: {Type: String, Default: ''}
+Resources:
+  ECRAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: {Version: '2012-10-17', Statement: [{Effect: Allow, Principal: {Service: build.apprunner.amazonaws.com}, Action: sts:AssumeRole}]}
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess]
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: {Version: '2012-10-17', Statement: [{Effect: Allow, Principal: {Service: tasks.apprunner.amazonaws.com}, Action: sts:AssumeRole}]}
+      Policies:
+        - PolicyName: app-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [s3:GetObject, s3:PutObject, s3:ListBucket]
+                Resource: [!Sub 'arn:aws:s3:::${ForecastBucket}', !Sub 'arn:aws:s3:::${ForecastBucket}/${ProjectPrefix}/*']
+              - Effect: Allow
+                Action: [athena:StartQueryExecution, athena:GetQueryExecution, athena:GetQueryResults, glue:GetDatabase, glue:GetDatabases, glue:GetTable, glue:GetTables, glue:GetPartition, glue:GetPartitions, sagemaker:InvokeEndpoint]
+                Resource: '*'
+  Service:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Ref ServiceName
+      SourceConfiguration:
+        AuthenticationConfiguration: {AccessRoleArn: !GetAtt ECRAccessRole.Arn}
+        AutoDeploymentsEnabled: true
+        ImageRepository:
+          ImageIdentifier: !Ref ImageUri
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: '8501'
+            RuntimeEnvironmentVariables:
+              - {Name: AWS_REGION, Value: !Ref AwsRegion}
+              - {Name: FORECAST_BUCKET, Value: !Ref ForecastBucket}
+              - {Name: PROJECT_PREFIX, Value: !Ref ProjectPrefix}
+              - {Name: ATHENA_DATABASE, Value: !Ref AthenaDatabase}
+              - {Name: ATHENA_OUTPUT, Value: !Ref AthenaOutput}
+              - {Name: FEEDBACK_BACKEND, Value: !Ref FeedbackBackend}
+              - {Name: DATABASE_URL, Value: !Ref DatabaseUrl}
+              - {Name: ENDPOINT_NAME, Value: !Ref EndpointName}
+      InstanceConfiguration: {Cpu: '1 vCPU', Memory: '2 GB', InstanceRoleArn: !GetAtt InstanceRole.Arn}
+Outputs:
+  ServiceUrl: {Value: !GetAtt Service.ServiceUrl}

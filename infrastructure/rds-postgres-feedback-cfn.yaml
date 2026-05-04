@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Optional RDS PostgreSQL for feedback. Use S3 feedback for fastest public demo.
+Parameters:
+  VpcId: {Type: AWS::EC2::VPC::Id}
+  SubnetIds: {Type: List<AWS::EC2::Subnet::Id>}
+  AppSecurityGroupId: {Type: AWS::EC2::SecurityGroup::Id}
+  DBPassword: {Type: String, NoEcho: true, MinLength: 8}
+Resources:
+  DBSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: postgres from app
+      SecurityGroupIngress: [{IpProtocol: tcp, FromPort: 5432, ToPort: 5432, SourceSecurityGroupId: !Ref AppSecurityGroupId}]
+  Subnets:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: {DBSubnetGroupDescription: granescala, SubnetIds: !Ref SubnetIds}
+  DB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: 20
+      DBName: granescala
+      MasterUsername: granescala_admin
+      MasterUserPassword: !Ref DBPassword
+      VPCSecurityGroups: [!Ref DBSG]
+      DBSubnetGroupName: !Ref Subnets
+      PubliclyAccessible: false
+Outputs:
+  DBEndpoint: {Value: !GetAtt DB.Endpoint.Address}
